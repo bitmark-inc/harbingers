@@ -27,10 +27,36 @@ out vec4 outColor;
 uniform sampler2D uDrawTex;
 uniform sampler2D uVideoTex;
 
+float maxComponent(vec3 c)
+{
+    return max(max(c.x, c.y), c.z);
+}
+float avgComponent(vec4 c)
+{
+    return maxComponent(c.xyz);
+}
+
+// Black Box From https://github.com/armory3d/armory/blob/master/Shaders/std/tonemap.glsl
+vec4 acesFilm(const vec4 x) {
+    const float a = 2.51;
+    const float b = 0.03;
+    const float c = 2.43;
+    const float d = 0.59;
+    const float e = 0.14;
+    return vec4(clamp((x.xyz * (a * x.xyz + b)) / (x.xyz * (c * x.xyz + d ) + e), 0.0, 1.0), 1.);
+}
+
 void main() {
     vec4 blurCol = texture(uDrawTex, vTexCoord);
     vec2 flippedCoords = vec2(vTexCoord.x, 1.-vTexCoord.y);
     vec4 videoCol = texture(uVideoTex, flippedCoords);
+
+    vec2 onePixel = 1.0 / uTextureSize;
+    vec2 gradient = vec2(
+        avgComponent(texture(uDrawTex, vTexCoord + vec2(onePixel.x, 0.))) - avgComponent(texture(uDrawTex, vTexCoord - vec2(onePixel.x, 0.))),
+        avgComponent(texture(uDrawTex, vTexCoord + vec2(0., onePixel.y)))- avgComponent(texture(uDrawTex, vTexCoord - vec2(0., onePixel.y))));
+
+    blurCol.xyz *= clamp(1. - pow(length(gradient), .4), 0., 1.);
     outColor = vec4(blurCol.xyz, 1.);
 }`;
 
@@ -108,6 +134,13 @@ void main() {
         average += texture(uUpdateTex, vec2(p_inc_x, vTexCoord.y));
         average += texture(uUpdateTex, vec2(p_inc_x, p_inc_y));
         average /= 9.;
+
+        float mouseSize = 1.;
+        vec2 posInPixels = vec2(vTexCoord.x, 1.-vTexCoord.y) * uTextureSize;
+        if (minimum_distance(mouse, prevMouse, posInPixels) < mouseSize)
+        {
+            average = vec4(1.);
+        }
 
         vec4 videoColor = texture(uVideoTex, vec2(vTexCoord.x, 1.-vTexCoord.y));
 
