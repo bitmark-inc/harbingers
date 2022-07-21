@@ -8,11 +8,13 @@
 
     <body style="margin:0;padding:0;background-color:black;overflow:hidden">
         <canvas id="canvas">Please enable JavaScript in your browser</canvas>
-        <input id="file-input" type="file" name="name" style="display: none;"/>
-        <script type="text/javascript" src="externals/stats.min.js"></script>
-        <script type="text/javascript" src="shaders.js"></script>
-        <script type="text/javascript" src="utils.js"></script>
-        <script type="text/javascript" src="blur.js"></script>
+
+        <p id="style" style="color:white">Style: </p>
+        <p id="distortion" style="color:white">Distortion: </p>
+        <p id="name" style="color:white">Name: </p>
+
+        <script type="text/javascript" src="effect.js"></script>
+        <script type="text/javascript" src="parameters.js"></script>
         <script type="text/javascript" src="main.js"></script>
     </body>
 </html>

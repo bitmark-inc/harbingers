@@ -1,20 +1,3 @@
-
-const params = {
-    'simSizeX': 1920,
-    'simSizeY': 1080,
-    'mouseX': 450.,
-    'mouseY': 450.,
-    'distortionAmount' : 0.,
-    'style' : 0.,
-    'prevMouseX': 450.,
-    'prevMouseY': 450.,
-    'steps' : 1,
-    'displaySize': 0.5,
-    'blurFlag': true,
-    'videoName': "test3.mp4",
-    'name': "params"
-};
-
 var copyVideo = false;
 
 function setupVideo(url) {
@@ -26,9 +9,6 @@ function setupVideo(url) {
     video.autoplay = true;
     video.muted = true;
     video.loop = true;
-
-    // Waiting for these 2 events ensures
-    // there is data in the video
 
     video.addEventListener(
         "playing",
@@ -84,8 +64,6 @@ function initTexture(gl, url) {
         pixel
     );
 
-    // Turn off mips and set  wrapping to clamp to edge so it
-    // will work regardless of the dimensions of the video.
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -93,9 +71,6 @@ function initTexture(gl, url) {
     return texture;
 }
 
-//
-// copy the video texture
-//
 function updateTexture(gl, texture, video) {
     const level = 0;
     const internalFormat = gl.RGBA;
@@ -121,32 +96,12 @@ function main()
         return;
     }
 
-    // setup stats
-    var showStats = false;
-    var stats = new Stats();
-    stats.showPanel(0);
-    document.body.appendChild(stats.dom);
-    stats.dom.style.display = "none";
-
-
-    function saveToDisk(exportObj)
-    {
-        var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
-        var downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute("href",     dataStr);
-        downloadAnchorNode.setAttribute("download", params.name + ".json");
-        document.body.appendChild(downloadAnchorNode); // required for firefox
-        downloadAnchorNode.click();
-        downloadAnchorNode.remove();
-    }
-
     function setSimSize()
     {
         canvas.width = params.simSizeX;
         canvas.height = params.simSizeY;
     }
     setSimSize();
-
 
     function updateDisplaySize()
     {
@@ -156,17 +111,6 @@ function main()
         canvas.style.height = strH + "px";
     }
     updateDisplaySize();
-
-    document.onkeypress = function(event)
-    {
-        event = event || window.event;
-        var charCode = event.keyCode || event.which;
-        var charStr = String.fromCharCode(charCode);
-        if (charStr == "f")
-        {
-            toggleFullscreen();
-        }
-    }
 
     const blur = new Blur(gl, params);
 
@@ -194,19 +138,23 @@ function main()
 
         params.distortionAmount = Math.min(Math.max(params.mouseX / params.simSizeX, 0.), 1.);
         params.style = Math.min(Math.max(params.mouseY / params.simSizeY, 0.), 1.);
+
+        document.getElementById("distortion").innerHTML = "Distortion: " + params.distortionAmount;
+        document.getElementById("style").innerHTML = "Style: " + params.style;
     });
 
     const texture = initTexture(gl);
     const video = setupVideo(params.videoName);
+
+    document.getElementById("name").innerHTML = "Name: " + params.videoName;
+
     const render = function() {
 
-        stats.begin();
         if (copyVideo)
         {
             updateTexture(gl, texture, video);
         }
         blur.draw(texture);
-        stats.end();
         requestAnimationFrame(render);
     }
 
