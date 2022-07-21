@@ -218,7 +218,7 @@ function main()
     });
 
     const texture = initTexture(gl);
-    const video = setupVideo("test.mp4");
+    const video = setupVideo("test1.mov");
     const render = function() {
 
         stats.begin();

@@ -87,7 +87,7 @@ void main() {
     {
         vec4 average = selfCol;
 
-        onePixel *= pow(selfBrightness, 1.5) * 100.;
+        //onePixel *= pow(selfBrightness, 2.2) * .5;
 
         float dec_x = vTexCoord.x - onePixel.x;
         float inc_x = vTexCoord.x + onePixel.x;
@@ -111,7 +111,7 @@ void main() {
 
         vec4 videoColor = texture(uVideoTex, vec2(vTexCoord.x, 1.-vTexCoord.y));
 
-        float newAmount = 0.1;
+        float newAmount = 0.01;
         vec4 blurColor =  average * (1. - newAmount) + videoColor * newAmount;
         outState = vec4(blurColor.xyz, average.w);
         outState = max(blurColor, videoColor);
@@ -129,7 +129,7 @@ void main() {
 
         selfCol = texture(uUpdateTex, vTexCoord + gradient);
         vec4 outCol = selfCol;
-        outCol.xyz *= .99;
+        outCol.xyz = pow(outCol.xyz, vec3(1.01));
         outCol.w -= selfCol.w - avgComponent(selfCol.xyz) * 0.1;
         outState = clamp(outCol, vec4(0.), vec4(1.));
     }
