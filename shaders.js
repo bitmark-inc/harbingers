@@ -21,16 +21,17 @@ const drawFrag =
 precision highp float;
 
 in vec2 vTexCoord;
-
 uniform vec2 uTextureSize;
-
 out vec4 outColor;
 
 uniform sampler2D uDrawTex;
+uniform sampler2D uVideoTex;
 
 void main() {
-    vec4 c = texture(uDrawTex, vTexCoord);
-    outColor = c;
+    vec4 blurCol = texture(uDrawTex, vTexCoord);
+    vec2 flippedCoords = vec2(vTexCoord.x, 1.-vTexCoord.y);
+    vec4 videoCol = texture(uVideoTex, flippedCoords);
+    outColor = vec4(blurCol.xyz, 1.);
 }`;
 
 const blurFrag =
@@ -41,9 +42,10 @@ uniform vec2 uTextureSize;
 uniform vec2 mouse;
 uniform vec2 prevMouse;
 uniform sampler2D uUpdateTex;
-uniform sampler2D uVideoTexture;
+uniform sampler2D uVideoTex;
 uniform float decay;
 uniform int blur;
+uniform int frameNum;
 
 in vec2 vTexCoord;
 out vec4 outState;
@@ -57,25 +59,46 @@ float minimum_distance(vec2 v, vec2 w, vec2 p) {
   return distance(p, projection);
 }
 
+float maxComponent(vec3 c)
+{
+    return max(max(c.x, c.y), c.z);
+}
+
+float avgComponent(vec3 c)
+{
+    return (c.x + c.y + c.z) / 3.;
+}
+
+float avgComponent(vec4 c)
+{
+    return maxComponent(c.xyz);
+}
+
+
 void main() {
     vec2 onePixel = 1.0 / uTextureSize;
 
-    vec4 average = vec4(0.);
+    vec4 selfCol = texture(uUpdateTex, vTexCoord);
+    outState = selfCol;
 
-    float dec_x = vTexCoord.x - onePixel.x;
-    float inc_x = vTexCoord.x + onePixel.x;
-    float dec_y = vTexCoord.y - onePixel.y;
-    float inc_y = vTexCoord.y + onePixel.y;
-
-    float p_dec_x = (dec_x < 0.0) ? dec_x + 1.0 : dec_x;
-    float p_inc_x = (inc_x > 1.0) ? inc_x - 1.0 : inc_x;
-    float p_dec_y = (dec_y < 0.0) ? dec_y + 1.0 : dec_y;
-    float p_inc_y = (inc_y > 1.0) ? inc_y - 1.0 : inc_y;
-
-    average += texture(uUpdateTex, vTexCoord);
+    float selfBrightness = avgComponent(selfCol.xyz);
 
     if (blur == 1)
     {
+        vec4 average = selfCol;
+
+        onePixel *= pow(selfBrightness, 1.5) * 100.;
+
+        float dec_x = vTexCoord.x - onePixel.x;
+        float inc_x = vTexCoord.x + onePixel.x;
+        float dec_y = vTexCoord.y - onePixel.y;
+        float inc_y = vTexCoord.y + onePixel.y;
+
+        float p_dec_x = (dec_x < 0.0) ? dec_x + 1.0 : dec_x;
+        float p_inc_x = (inc_x > 1.0) ? inc_x - 1.0 : inc_x;
+        float p_dec_y = (dec_y < 0.0) ? dec_y + 1.0 : dec_y;
+        float p_inc_y = (inc_y > 1.0) ? inc_y - 1.0 : inc_y;
+
         average += texture(uUpdateTex, vec2(p_dec_x, p_dec_y));
         average += texture(uUpdateTex, vec2(p_dec_x, vTexCoord.y));
         average += texture(uUpdateTex, vec2(p_dec_x, p_inc_y));
@@ -85,20 +108,30 @@ void main() {
         average += texture(uUpdateTex, vec2(p_inc_x, vTexCoord.y));
         average += texture(uUpdateTex, vec2(p_inc_x, p_inc_y));
         average /= 9.;
-    }
 
-/*
-    float mouseSize = 1.;
-    vec2 posInPixels = vec2(vTexCoord.x, 1.-vTexCoord.y) * uTextureSize;
-    if (minimum_distance(mouse, prevMouse, posInPixels) < mouseSize)
+        vec4 videoColor = texture(uVideoTex, vec2(vTexCoord.x, 1.-vTexCoord.y));
+
+        float newAmount = 0.1;
+        vec4 blurColor =  average * (1. - newAmount) + videoColor * newAmount;
+        outState = vec4(blurColor.xyz, average.w);
+        outState = max(blurColor, videoColor);
+        outState.w = average.w;
+        //outState = vec4(selfCol.xyz, average.w);
+        //outState = vec4(average.xyz, selfCol.w);
+        //outState = average;
+    }
+    else
     {
-        average = vec4(1.);
+        onePixel *= .01;
+        vec2 gradient = vec2(
+            avgComponent(texture(uUpdateTex, vTexCoord + vec2(onePixel.x, 0.))) - avgComponent(texture(uUpdateTex, vTexCoord - vec2(onePixel.x, 0.))),
+            avgComponent(texture(uUpdateTex, vTexCoord + vec2(0., onePixel.y)))- avgComponent(texture(uUpdateTex, vTexCoord - vec2(0., onePixel.y))));
+
+        selfCol = texture(uUpdateTex, vTexCoord + gradient);
+        vec4 outCol = selfCol;
+        outCol.xyz *= .99;
+        outCol.w -= selfCol.w - avgComponent(selfCol.xyz) * 0.1;
+        outState = clamp(outCol, vec4(0.), vec4(1.));
     }
-*/
-
-    vec4 videoColor = texture(uVideoTexture, vec2(vTexCoord.x, 1.-vTexCoord.y));
-
-    float newAmount = .01;//1.-pow(max(max(videoColor.x, videoColor.y), videoColor.z), 2.f);
-    outState =  average * (1. - newAmount) + videoColor * newAmount;
 
 }`;

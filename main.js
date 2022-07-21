@@ -54,7 +54,7 @@ function initTexture(gl, url) {
     const border = 0;
     const srcFormat = gl.RGBA;
     const srcType = gl.UNSIGNED_BYTE;
-    const pixel = new Uint8Array([0, 0, 255, 255]); // opaque blue
+    const pixel = new Uint8Array([255, 0, 255, 255]);
     gl.texImage2D(
         gl.TEXTURE_2D,
         level,
@@ -150,14 +150,14 @@ function main()
     }
 
     const params = {
-        'simSizeX': 500,
-        'simSizeY': 500,
+        'simSizeX': 1920,
+        'simSizeY': 1080,
         'mouseX': 450.,
         'mouseY': 450.,
         'prevMouseX': 450.,
         'prevMouseY': 450.,
         'steps' : 1,
-        'displaySize': 1,
+        'displaySize': 0.5,
         'blurFlag': true,
         displayFPS,
         toggleFullscreen,
