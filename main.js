@@ -1,3 +1,20 @@
+
+const params = {
+    'simSizeX': 1920,
+    'simSizeY': 1080,
+    'mouseX': 450.,
+    'mouseY': 450.,
+    'distortionAmount' : 0.,
+    'style' : 0.,
+    'prevMouseX': 450.,
+    'prevMouseY': 450.,
+    'steps' : 1,
+    'displaySize': 0.5,
+    'blurFlag': true,
+    'videoName': "test1.mov",
+    'name': "params"
+};
+
 var copyVideo = false;
 
 function setupVideo(url) {
@@ -111,32 +128,6 @@ function main()
     document.body.appendChild(stats.dom);
     stats.dom.style.display = "none";
 
-    var fullscreen = false;
-    function toggleFullscreen()
-    {
-        if (fullscreen)
-        {
-            closeFullscreen();
-        }
-        else
-        {
-            openFullscreen();
-        }
-        fullscreen = !fullscreen;
-    }
-
-    function displayFPS()
-    {
-        showStats = !showStats;
-        if (showStats)
-        {
-            stats.dom.style.display = "block";
-        }
-        else
-        {
-            stats.dom.style.display = "none";
-        }
-    };
 
     function saveToDisk(exportObj)
     {
@@ -148,21 +139,6 @@ function main()
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
     }
-
-    const params = {
-        'simSizeX': 1920,
-        'simSizeY': 1080,
-        'mouseX': 450.,
-        'mouseY': 450.,
-        'prevMouseX': 450.,
-        'prevMouseY': 450.,
-        'steps' : 1,
-        'displaySize': 0.5,
-        'blurFlag': true,
-        displayFPS,
-        toggleFullscreen,
-        'name': "params"
-    };
 
     function setSimSize()
     {
@@ -215,10 +191,13 @@ function main()
         params.prevMouseY = params.mouseY;
         params.mouseX = (event.clientX - canvasPosition.x)/params.displaySize;
         params.mouseY = (event.clientY - canvasPosition.y)/params.displaySize;
+
+        params.distortionAmount = Math.min(Math.max(params.mouseX / params.simSizeX, 0.), 1.);
+        params.style = Math.min(Math.max(params.mouseY / params.simSizeY, 0.), 1.);
     });
 
     const texture = initTexture(gl);
-    const video = setupVideo("test1.mov");
+    const video = setupVideo(params.videoName);
     const render = function() {
 
         stats.begin();

@@ -35,6 +35,8 @@ class Blur
                 'uDrawTex': this.gl.getUniformLocation(this.drawBlur, "uDrawTex"),
                 'uVideoTex': this.gl.getUniformLocation(this.drawBlur, "uVideoTex"),
                 'uTextureSize': this.gl.getUniformLocation(this.drawBlur, "uTextureSize"),
+                'distortionAmount': this.gl.getUniformLocation(this.drawBlur, "distortionAmount"),
+                'style': this.gl.getUniformLocation(this.drawBlur, "style"),
             }
         }
         this.updateProgramLocations = {
@@ -49,6 +51,8 @@ class Blur
                 'prevMouse': this.gl.getUniformLocation(this.updateBlur, "prevMouse"),
                 'uUpdateTex': this.gl.getUniformLocation(this.updateBlur, "uUpdateTex"),
                 'uVideoTex': this.gl.getUniformLocation(this.updateBlur, "uVideoTex"),
+                'distortionAmount': this.gl.getUniformLocation(this.updateBlur, "distortionAmount"),
+                'style': this.gl.getUniformLocation(this.updateBlur, "style"),
             }
         };
 
@@ -75,6 +79,10 @@ class Blur
 
     blurHelper(videoTexture)
     {
+
+        for (let i = 0; i < 2; ++i)
+        {
+
         this.gl.disable(this.gl.BLEND);
 
         this.gl.bindVertexArray(this.vao);
@@ -104,7 +112,11 @@ class Blur
         this.gl.uniform1f(this.gu(this.updateBlur, "decay"),
             this.params.decay);
         this.gl.uniform1i(this.gu(this.updateBlur, "blur"),
-            this.params.blurFlag|0);
+            i);
+        this.gl.uniform1f(this.gu(this.updateBlur, "distortionAmount"),
+            this.params.distortionAmount);
+        this.gl.uniform1f(this.gu(this.updateBlur, "style"),
+            this.params.style);
 
         this.gl.viewport(0, 0, this.params.simSizeX, this.params.simSizeY);
         this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -114,46 +126,7 @@ class Blur
         // swap read and write textures
         this.textures = [this.textures[1], this.textures[0]];
         this.frameNum++;
-
-        // extra
-        this.gl.disable(this.gl.BLEND);
-
-        this.gl.bindVertexArray(this.vao);
-        this.gl.useProgram(this.updateBlur);
-
-        this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures[1]);
-        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.framebuffer);
-        this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.COLOR_ATTACHMENT0,
-            this.gl.TEXTURE_2D, this.textures[1], 0);
-
-        this.gl.activeTexture(this.gl.TEXTURE1);
-        this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures[0]);
-        this.gl.uniform1i(this.updateProgramLocations.uniform.uUpdateTex, 1);
-
-        this.gl.activeTexture(this.gl.TEXTURE2);
-        this.gl.bindTexture(this.gl.TEXTURE_2D, videoTexture);
-        this.gl.uniform1i(this.updateProgramLocations.uniform.uVideoTex, 2);
-
-        this.gl.uniform1i(this.gu(this.updateBlur, "frameNum"),
-            this.frameNum);
-        this.gl.uniform2f(this.gu(this.updateBlur, "mouse"),
-            this.params.mouseX, this.params.mouseY);
-        this.gl.uniform2f(this.gu(this.updateBlur, "prevMouse"),
-            this.params.prevMouseX, this.params.prevMouseY);
-        this.gl.uniform2f(this.gu(this.updateBlur, "uTextureSize"),
-            this.params.simSizeX, this.params.simSizeY);
-        this.gl.uniform1f(this.gu(this.updateBlur, "decay"),
-            this.params.decay);
-        this.gl.uniform1i(this.gu(this.updateBlur, "blur"), 0);
-
-        this.gl.viewport(0, 0, this.params.simSizeX, this.params.simSizeY);
-        this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-        this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
-
-        // swap read and write textures
-        this.textures = [this.textures[1], this.textures[0]];
-        this.frameNum++;
+        }
     }
 
     draw(videoTexture)
@@ -166,6 +139,7 @@ class Blur
         this.gl.activeTexture(this.gl.TEXTURE0);
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures[0]);
         this.gl.uniform1i(this.drawProgramLocations.uniform.uDrawTex, 0);
+        this.gl.uniform1f(this.drawProgramLocations.uniform.distortionAmount, this.params.distortionAmount);
 
         this.gl.activeTexture(this.gl.TEXTURE1);
         this.gl.bindTexture(this.gl.TEXTURE_2D, videoTexture);

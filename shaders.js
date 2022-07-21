@@ -27,6 +27,9 @@ out vec4 outColor;
 uniform sampler2D uDrawTex;
 uniform sampler2D uVideoTex;
 
+uniform float distortionAmount;
+uniform float style;
+
 float maxComponent(vec3 c)
 {
     return max(max(c.x, c.y), c.z);
@@ -46,7 +49,8 @@ vec4 acesFilm(const vec4 x) {
     return vec4(clamp((x.xyz * (a * x.xyz + b)) / (x.xyz * (c * x.xyz + d ) + e), 0.0, 1.0), 1.);
 }
 
-void main() {
+void main()
+{
     vec4 blurCol = texture(uDrawTex, vTexCoord);
     vec2 flippedCoords = vec2(vTexCoord.x, 1.-vTexCoord.y);
     vec4 videoCol = texture(uVideoTex, flippedCoords);
@@ -56,7 +60,7 @@ void main() {
         avgComponent(texture(uDrawTex, vTexCoord + vec2(onePixel.x, 0.))) - avgComponent(texture(uDrawTex, vTexCoord - vec2(onePixel.x, 0.))),
         avgComponent(texture(uDrawTex, vTexCoord + vec2(0., onePixel.y)))- avgComponent(texture(uDrawTex, vTexCoord - vec2(0., onePixel.y))));
 
-    blurCol.xyz *= clamp(1. - pow(length(gradient), .4), 0., 1.);
+    blurCol.xyz *= pow(mix(1., clamp(1. - pow(length(gradient), .4), 0., 1.), mix(pow(distortionAmount*1.4, 4.2), distortionAmount, style)), .5);
     outColor = vec4(blurCol.xyz, 1.);
 }`;
 
@@ -72,6 +76,9 @@ uniform sampler2D uVideoTex;
 uniform float decay;
 uniform int blur;
 uniform int frameNum;
+
+uniform float distortionAmount;
+uniform float style;
 
 in vec2 vTexCoord;
 out vec4 outState;
@@ -100,6 +107,12 @@ float avgComponent(vec4 c)
     return maxComponent(c.xyz);
 }
 
+// Noise From http://www.science-and-fiction.org/rendering/noise.html
+float rand2D(in vec2 co)
+{
+    return fract(sin(dot(co.xy, vec2((0.5 * (12.9898 + float(frameNum))), 78.233))) * 43758.5453);
+}
+
 
 void main() {
     vec2 onePixel = 1.0 / uTextureSize;
@@ -109,11 +122,14 @@ void main() {
 
     float selfBrightness = avgComponent(selfCol.xyz);
 
+    float r = rand2D(vTexCoord);
+
     if (blur == 1)
     {
         vec4 average = selfCol;
 
-        //onePixel *= pow(selfBrightness, 2.2) * .5;
+        onePixel *= pow(selfBrightness, 2.2) * distortionAmount;
+        //onePixel *= .1 * distortionAmount;
 
         float dec_x = vTexCoord.x - onePixel.x;
         float inc_x = vTexCoord.x + onePixel.x;
@@ -144,10 +160,10 @@ void main() {
 
         vec4 videoColor = texture(uVideoTex, vec2(vTexCoord.x, 1.-vTexCoord.y));
 
-        float newAmount = 0.01;
+        float newAmount = mix(1.0, 0.01, clamp(distortionAmount, 0., 1.));
         vec4 blurColor =  average * (1. - newAmount) + videoColor * newAmount;
         outState = vec4(blurColor.xyz, average.w);
-        outState = max(blurColor, videoColor);
+        //outState = max(blurColor, videoColor);
         outState.w = average.w;
         //outState = vec4(selfCol.xyz, average.w);
         //outState = vec4(average.xyz, selfCol.w);
@@ -155,14 +171,14 @@ void main() {
     }
     else
     {
-        onePixel *= .01;
+        onePixel *= r * mix(0.05, 200.*r, pow(style, 10.0)) * distortionAmount;
         vec2 gradient = vec2(
             avgComponent(texture(uUpdateTex, vTexCoord + vec2(onePixel.x, 0.))) - avgComponent(texture(uUpdateTex, vTexCoord - vec2(onePixel.x, 0.))),
             avgComponent(texture(uUpdateTex, vTexCoord + vec2(0., onePixel.y)))- avgComponent(texture(uUpdateTex, vTexCoord - vec2(0., onePixel.y))));
 
         selfCol = texture(uUpdateTex, vTexCoord + gradient);
         vec4 outCol = selfCol;
-        outCol.xyz = pow(outCol.xyz, vec3(1.01));
+        outCol.xyz = pow(outCol.xyz, vec3(1.0001));
         outCol.w -= selfCol.w - avgComponent(selfCol.xyz) * 0.1;
         outState = clamp(outCol, vec4(0.), vec4(1.));
     }
