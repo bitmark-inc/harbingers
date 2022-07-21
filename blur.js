@@ -37,6 +37,7 @@ class Blur
                 'uTextureSize': this.gl.getUniformLocation(this.drawBlur, "uTextureSize"),
                 'distortionAmount': this.gl.getUniformLocation(this.drawBlur, "distortionAmount"),
                 'style': this.gl.getUniformLocation(this.drawBlur, "style"),
+                'frameNum': this.gl.getUniformLocation(this.drawBlur, "frameNum"),
             }
         }
         this.updateProgramLocations = {
@@ -140,6 +141,8 @@ class Blur
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures[0]);
         this.gl.uniform1i(this.drawProgramLocations.uniform.uDrawTex, 0);
         this.gl.uniform1f(this.drawProgramLocations.uniform.distortionAmount, this.params.distortionAmount);
+        this.gl.uniform1f(this.drawProgramLocations.uniform.style, this.params.style);
+        this.gl.uniform1i(this.drawProgramLocations.uniform.frameNum, this.frameNum);
 
         this.gl.activeTexture(this.gl.TEXTURE1);
         this.gl.bindTexture(this.gl.TEXTURE_2D, videoTexture);

@@ -11,7 +11,7 @@ const params = {
     'steps' : 1,
     'displaySize': 0.5,
     'blurFlag': true,
-    'videoName': "test1.mov",
+    'videoName': "test3.mp4",
     'name': "params"
 };
 
@@ -71,7 +71,7 @@ function initTexture(gl, url) {
     const border = 0;
     const srcFormat = gl.RGBA;
     const srcType = gl.UNSIGNED_BYTE;
-    const pixel = new Uint8Array([255, 0, 255, 255]);
+    const pixel = new Uint8Array([0, 0, 0, 0]);
     gl.texImage2D(
         gl.TEXTURE_2D,
         level,

@@ -29,6 +29,7 @@ uniform sampler2D uVideoTex;
 
 uniform float distortionAmount;
 uniform float style;
+uniform int frameNum;
 
 float maxComponent(vec3 c)
 {
@@ -49,18 +50,25 @@ vec4 acesFilm(const vec4 x) {
     return vec4(clamp((x.xyz * (a * x.xyz + b)) / (x.xyz * (c * x.xyz + d ) + e), 0.0, 1.0), 1.);
 }
 
+// Noise From http://www.science-and-fiction.org/rendering/noise.html
+float rand2D(in vec2 co)
+{
+    return fract(sin(dot(co.xy, vec2((0.5 * (12.9898 + float(frameNum))), 78.233))) * 43758.5453);
+}
+
 void main()
 {
     vec4 blurCol = texture(uDrawTex, vTexCoord);
     vec2 flippedCoords = vec2(vTexCoord.x, 1.-vTexCoord.y);
     vec4 videoCol = texture(uVideoTex, flippedCoords);
 
-    vec2 onePixel = 1.0 / uTextureSize;
+    vec2 onePixel = mix(3., 100.*rand2D(vTexCoord), pow(style, 8.)) / uTextureSize;
+
     vec2 gradient = vec2(
         avgComponent(texture(uDrawTex, vTexCoord + vec2(onePixel.x, 0.))) - avgComponent(texture(uDrawTex, vTexCoord - vec2(onePixel.x, 0.))),
         avgComponent(texture(uDrawTex, vTexCoord + vec2(0., onePixel.y)))- avgComponent(texture(uDrawTex, vTexCoord - vec2(0., onePixel.y))));
 
-    blurCol.xyz *= pow(mix(1., clamp(1. - pow(length(gradient), .4), 0., 1.), mix(pow(distortionAmount*1.4, 4.2), distortionAmount, style)), .5);
+    blurCol.xyz *= clamp(pow(mix(1., clamp(1. - pow(length(gradient), .4), 0., 1.), mix(pow(distortionAmount*1.4, 4.2), distortionAmount, style)), .5), .1, 1.);
     outColor = vec4(blurCol.xyz, 1.);
 }`;
 
@@ -160,7 +168,7 @@ void main() {
 
         vec4 videoColor = texture(uVideoTex, vec2(vTexCoord.x, 1.-vTexCoord.y));
 
-        float newAmount = mix(1.0, 0.01, clamp(distortionAmount, 0., 1.));
+        float newAmount = mix(1.0, 0.001, clamp(distortionAmount, 0., 1.));
         vec4 blurColor =  average * (1. - newAmount) + videoColor * newAmount;
         outState = vec4(blurColor.xyz, average.w);
         //outState = max(blurColor, videoColor);
