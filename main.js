@@ -153,8 +153,8 @@ function main()
         if (copyVideo)
         {
             updateTexture(gl, texture, video);
+            blur.draw(texture);
         }
-        blur.draw(texture);
         requestAnimationFrame(render);
     }
 

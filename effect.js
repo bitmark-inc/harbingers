@@ -70,6 +70,8 @@ void main()
 
     blurCol.xyz *= clamp(pow(mix(1., clamp(1. - pow(length(gradient), .4), 0., 1.), mix(pow(distortionAmount*1.4, 4.2), distortionAmount, style)), .5), .1, 1.);
     outColor = vec4(blurCol.xyz, 1.);
+
+
 }`;
 
 const blurFrag =
@@ -136,8 +138,7 @@ void main() {
     {
         vec4 average = selfCol;
 
-        onePixel *= pow(selfBrightness, 2.2) * distortionAmount;
-        //onePixel *= .1 * distortionAmount;
+        //onePixel *= pow(selfBrightness, 2.2) * distortionAmount;
 
         float dec_x = vTexCoord.x - onePixel.x;
         float inc_x = vTexCoord.x + onePixel.x;
