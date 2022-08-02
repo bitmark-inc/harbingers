@@ -161,4 +161,11 @@ function main()
     requestAnimationFrame(render);
 }
 
-main();
+
+window.addEventListener("provenance-request-error", function (event) {
+    console.log("fail to get provenance:", event.detail.error)
+})
+
+window.addEventListener("provenance-ready", function (event) {
+    main(event.detail.provenances);
+})
