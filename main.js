@@ -37,6 +37,8 @@ function setupVideo(url) {
         }
     }
 
+    playerBar(video)
+
     return video;
 }
 
