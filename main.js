@@ -42,6 +42,17 @@ function setupVideo(url) {
     return video;
 }
 
+// calcDistortion returns a distortion value for a unique edition by given
+// max distortion, edition number, and provenance length
+function calcDistortion(maxDistortion, editionNumber, provenanceLength) {
+    const MAX_EDITION_NUMBER = 40
+    const MAX_PROVENANCE_LENGTH = 8
+
+    let distortion = 0.1 +
+        (maxDistortion - 0.1) * (editionNumber + Math.max(provenanceLength, MAX_PROVENANCE_LENGTH)) / (MAX_EDITION_NUMBER + MAX_PROVENANCE_LENGTH)
+    return distortion
+}
+
 function initTexture(gl, url) {
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -89,8 +100,8 @@ function updateTexture(gl, texture, video) {
     );
 }
 
-function main()
-{
+
+function main(provenanceLength) {
     const canvas = document.getElementById("canvas");
     const gl = canvas.getContext('webgl2');
     if (!gl) {
@@ -98,15 +109,15 @@ function main()
         return;
     }
 
-    function setSimSize()
-    {
+    function setSimSize() {
         canvas.width = params.simSizeX;
         canvas.height = params.simSizeY;
     }
     setSimSize();
 
-    function updateDisplaySize()
-    {
+    params.distortionAmount = calcDistortion(params.distortionAmount, editionNumber, provenanceLength)
+
+    function updateDisplaySize() {
         let strW = parseInt(params.simSizeX * params.displaySize);
         canvas.style.width = strW + "px";
         let strH = parseInt(params.simSizeY * params.displaySize);
@@ -116,7 +127,7 @@ function main()
 
     const blur = new Blur(gl, params);
 
-    const createInitTexture = function() {
+    const createInitTexture = function () {
         let uvTexture = [];
         for (let i = 0; i < params.simSizeX; i++) {
             for (let j = 0; j < params.simSizeY; j++) {
@@ -130,30 +141,14 @@ function main()
 
     blur.setTexture(createInitTexture())
 
-    var mouse = [];
-    let canvasPosition = document.getElementById('canvas').getBoundingClientRect();
-    document.addEventListener("mousemove", () => {
-        params.prevMouseX = params.mouseX;
-        params.prevMouseY = params.mouseY;
-        params.mouseX = (event.clientX - canvasPosition.x)/params.displaySize;
-        params.mouseY = (event.clientY - canvasPosition.y)/params.displaySize;
-
-        params.distortionAmount = Math.min(Math.max(params.mouseX / params.simSizeX, 0.), 1.);
-        params.style = Math.min(Math.max(params.mouseY / params.simSizeY, 0.), 1.);
-
-        document.getElementById("distortion").innerHTML = "Distortion: " + params.distortionAmount;
-        document.getElementById("style").innerHTML = "Style: " + params.style;
-    });
-
     const texture = initTexture(gl);
     const video = setupVideo(params.videoName);
 
     document.getElementById("name").innerHTML = "Name: " + params.videoName;
 
-    const render = function() {
+    const render = function () {
 
-        if (copyVideo)
-        {
+        if (copyVideo) {
             updateTexture(gl, texture, video);
             blur.draw(texture);
         }
@@ -166,8 +161,13 @@ function main()
 
 window.addEventListener("provenance-request-error", function (event) {
     console.log("fail to get provenance:", event.detail.error)
+    main(2);
 })
 
 window.addEventListener("provenance-ready", function (event) {
-    main(event.detail.provenances);
+    let provenanceLength = 2
+    if (event.detail.provenances) {
+        provenanceLength = event.detail.provenances.length
+    }
+    main(event.detail.provenances.length);
 })
