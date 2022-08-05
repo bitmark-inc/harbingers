@@ -1,4 +1,3 @@
-  let editionNumber = parseInt(new URLSearchParams(window.location.search).get('edition_number') || 0)
   let blockchain = new URLSearchParams(window.location.search).get('blockchain') || "tez"
   let contract = new URLSearchParams(window.location.search).get('contract') || ""
   let tokenID = new URLSearchParams(window.location.search).get('token_id') || ""

@@ -42,14 +42,13 @@ function setupVideo(url) {
     return video;
 }
 
-// calcDistortion returns a distortion value for a unique edition by given
-// max distortion, edition number, and provenance length
-function calcDistortion(maxDistortion, editionNumber, provenanceLength) {
-    const MAX_EDITION_NUMBER = 40
-    const MAX_PROVENANCE_LENGTH = 8
+// calcDistortion returns a distortion value by max distortion and provenance length
+function calcDistortion(maxDistortion, provenanceLength) {
+    const MAX_PROVENANCE_LENGTH = 10
 
     let distortion = 0.1 +
-        (maxDistortion - 0.1) * (editionNumber + Math.max(provenanceLength, MAX_PROVENANCE_LENGTH)) / (MAX_EDITION_NUMBER + MAX_PROVENANCE_LENGTH)
+        (maxDistortion - 0.1) * Math.min(provenanceLength - 1, MAX_PROVENANCE_LENGTH - 1) / (MAX_PROVENANCE_LENGTH - 1)
+
     return distortion
 }
 
@@ -115,7 +114,7 @@ function main(provenanceLength) {
     }
     setSimSize();
 
-    params.distortionAmount = calcDistortion(params.distortionAmount, editionNumber, provenanceLength)
+    params.distortionAmount = calcDistortion(params.distortionAmount, provenanceLength)
 
     function updateDisplaySize() {
         let strW = parseInt(params.simSizeX * params.displaySize);
@@ -161,13 +160,13 @@ function main(provenanceLength) {
 
 window.addEventListener("provenance-request-error", function (event) {
     console.log("fail to get provenance:", event.detail.error)
-    main(2);
+    main(1);
 })
 
 window.addEventListener("provenance-ready", function (event) {
-    let provenanceLength = 2
+    let provenanceLengthAfterSale = 1
     if (event.detail.provenances) {
-        provenanceLength = event.detail.provenances.length
+        provenanceLengthAfterSale = Math.max(event.detail.provenances.length - 2, provenanceLengthAfterSale)
     }
-    main(event.detail.provenances.length);
+    main(provenanceLengthAfterSale);
 })
