@@ -1,9 +1,21 @@
-  let blockchain = new URLSearchParams(window.location.search).get('blockchain') || "tez"
+  let blockchain = new URLSearchParams(window.location.search).get('blockchain') || "tezos"
   let contract = new URLSearchParams(window.location.search).get('contract') || ""
   let tokenID = new URLSearchParams(window.location.search).get('token_id') || ""
+
+  function blockchainAlias(blockchain) {
+    switch (blockchain) {
+      case "tezos":
+        return "tez"
+      case "ethereum":
+        return "eth"
+      default:
+        return "tez"
+    }
+  }
+
   let xhrParams = JSON.stringify({
     "ids": [
-      [blockchain, contract, tokenID].join("-")
+      [blockchainAlias(blockchain), contract, tokenID].join("-")
     ]
   })
 
