@@ -45,9 +45,12 @@ function setupVideo(url) {
 // calcDistortion returns a distortion value by max distortion and provenance length
 function calcDistortion(maxDistortion, provenanceLength) {
     const MAX_PROVENANCE_LENGTH = 10
+    let distortion = 0.0
+    if (provenanceLength) {
+        distortion = 0.1 +
+            (maxDistortion - 0.1) * Math.min(provenanceLength - 1, MAX_PROVENANCE_LENGTH - 1) / (MAX_PROVENANCE_LENGTH - 1)
 
-    let distortion = 0.1 +
-        (maxDistortion - 0.1) * Math.min(provenanceLength - 1, MAX_PROVENANCE_LENGTH - 1) / (MAX_PROVENANCE_LENGTH - 1)
+    }
 
     return distortion
 }
@@ -160,11 +163,11 @@ function main(provenanceLength) {
 
 window.addEventListener("provenance-request-error", function (event) {
     console.log("fail to get provenance:", event.detail.error)
-    main(1);
+    main(0);
 })
 
 window.addEventListener("provenance-ready", function (event) {
-    let provenanceLengthAfterSale = 1
+    let provenanceLengthAfterSale = 0
     if (event.detail.provenances) {
         provenanceLengthAfterSale = Math.max(event.detail.provenances.length - 2, provenanceLengthAfterSale)
     }
