@@ -122,8 +122,10 @@ function main(provenanceLength) {
     function updateDisplaySize() {
         let strW = parseInt(params.simSizeX * params.displaySize);
         canvas.style.width = strW + "px";
+        canvas.style.maxWidth = strW + "px";
         let strH = parseInt(params.simSizeY * params.displaySize);
         canvas.style.height = strH + "px";
+        canvas.style.maxHeight = strH + "px";
     }
     updateDisplaySize();
 
